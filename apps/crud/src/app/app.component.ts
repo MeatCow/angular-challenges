@@ -1,52 +1,52 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+} from '@angular/core';
 import { randText } from '@ngneat/falso';
+import { Todo } from './todo.model';
+import { TodoService } from './todo.service';
 
 @Component({
   standalone: true,
   imports: [CommonModule],
   selector: 'app-root',
   template: `
-    <div *ngFor="let todo of todos">
+    <div *ngFor="let todo of todos$ | async">
       {{ todo.title }}
       <button (click)="update(todo)">Update</button>
+      <button (click)="delete(todo.id)">Delete</button>
     </div>
   `,
-  styles: [],
+  styles: [
+    `
+      div {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding-bottom: 0.5rem;
+        gap: 0.25rem;
+      }
+    `,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit {
-  todos!: any[];
+  todoService = inject(TodoService);
 
-  constructor(private http: HttpClient) {}
+  todos$ = this.todoService.todos$;
 
   ngOnInit(): void {
-    this.http
-      .get<any[]>('https://jsonplaceholder.typicode.com/todos')
-      .subscribe((todos) => {
-        console.log('return', todos);
-        this.todos = todos;
-      });
+    this.todoService.loadTodos();
   }
 
-  update(todo: any) {
-    this.http
-      .put<any>(
-        `https://jsonplaceholder.typicode.com/todos/${todo.id}`,
-        JSON.stringify({
-          todo: todo.id,
-          title: randText(),
-          body: todo.body,
-          userId: todo.userId,
-        }),
-        {
-          headers: {
-            'Content-type': 'application/json; charset=UTF-8',
-          },
-        }
-      )
-      .subscribe((todoUpdated: any) => {
-        this.todos[todoUpdated.id - 1] = todoUpdated;
-      });
+  update(todo: Todo) {
+    this.todoService.updateTodo({ ...todo, title: randText() });
+  }
+
+  delete(id: number) {
+    this.todoService.deleteTodo(id);
   }
 }
