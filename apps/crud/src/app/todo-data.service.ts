@@ -6,18 +6,15 @@ import { Todo } from './todo.model';
 export class TodoDataService {
   http = inject(HttpClient);
 
-  get = () => {
-    return this.http.get<Todo[]>('https://jsonplaceholder.typicode.com/todos');
-  };
+  get = () =>
+    this.http.get<Todo[]>('https://jsonplaceholder.typicode.com/todos');
 
-  put = (todo: Todo) => {
-    return this.http.put<Todo>(
+  put = (todo: Todo) =>
+    this.http.put<Todo>(
       `https://jsonplaceholder.typicode.com/todos/${todo.id}`,
       todo
     );
-  };
 
-  delete(id: number) {
-    return this.http.delete(`https://jsonplaceholder.typicode.com/todos/${id}`);
-  }
+  delete = (id: number) =>
+    this.http.delete(`https://jsonplaceholder.typicode.com/todos/${id}`);
 }

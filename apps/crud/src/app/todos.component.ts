@@ -6,34 +6,26 @@ import {
   inject,
 } from '@angular/core';
 import { randText } from '@ngneat/falso';
+import { TodoItemComponent } from './todo-item.component';
 import { Todo } from './todo.model';
 import { TodoService } from './todo.service';
 
 @Component({
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TodoItemComponent],
   selector: 'app-root',
   template: `
-    <div *ngFor="let todo of todos$ | async">
-      {{ todo.title }}
-      <button (click)="update(todo)">Update</button>
-      <button (click)="delete(todo.id)">Delete</button>
-    </div>
+    <todo-item
+      *ngFor="let todo of todos$ | async"
+      [todo]="todo"
+      (update)="update($event)"
+      (delete)="delete($event)">
+    </todo-item>
   `,
-  styles: [
-    `
-      div {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        padding-bottom: 0.5rem;
-        gap: 0.25rem;
-      }
-    `,
-  ],
+  styles: [``],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent implements OnInit {
+export class TodosComponent implements OnInit {
   todoService = inject(TodoService);
 
   todos$ = this.todoService.todos$;
