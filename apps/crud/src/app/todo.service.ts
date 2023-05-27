@@ -1,39 +1,36 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { TodoDataService } from './todo-data.service';
 import { Todo } from './todo.model';
+import { TodosStore } from './todos.store';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TodoService {
-  private readonly todoDataService = inject(TodoDataService);
-  private readonly todosSubject = new BehaviorSubject<Todo[]>([]);
+  todosStore = inject(TodosStore);
+  readonly todos$ = this.todosStore.todos$;
 
-  readonly todos$ = this.todosSubject.asObservable();
+  http = inject(HttpClient);
 
   loadTodos = () => {
-    this.todoDataService.get().subscribe((todos) => {
-      this.todosSubject.next(todos);
-    });
+    this.http
+      .get<Todo[]>('https://jsonplaceholder.typicode.com/todos')
+      .subscribe((todos) => {
+        this.todosStore.setState({ todos });
+      });
   };
 
   updateTodo = (todo: Todo) => {
-    this.todoDataService.put(todo).subscribe((todoUpdated: Todo) => {
-      this.todosSubject.next(
-        this.todosSubject.value.map((t) => {
-          if (t.id !== todoUpdated.id) return t;
-          return todoUpdated;
-        })
+    this.http
+      .put<Todo>(`https://jsonplaceholder.typicode.com/todos/${todo.id}`, todo)
+      .subscribe((todoUpdated: Todo) =>
+        this.todosStore.updateTodo(todoUpdated)
       );
-    });
   };
 
   deleteTodo = (id: number) => {
-    this.todoDataService.delete(id).subscribe(() => {
-      this.todosSubject.next(
-        this.todosSubject.value.filter((t) => t.id !== id)
-      );
-    });
+    this.http
+      .delete(`https://jsonplaceholder.typicode.com/todos/${id}`)
+      .subscribe(() => this.todosStore.deleteTodo(id));
   };
 }
