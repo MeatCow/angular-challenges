@@ -1,44 +1,40 @@
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  OnInit,
-  inject,
-} from '@angular/core';
-import { randText } from '@ngneat/falso';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { LetDirective } from '@ngrx/component';
+import { provideComponentStore } from '@ngrx/component-store';
 import { TodoItemComponent } from './todo-item.component';
-import { Todo } from './todo.model';
-import { TodoService } from './todo.service';
+import { TodoStore } from './todos.store';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, TodoItemComponent],
-  selector: 'app-root',
+  imports: [
+    CommonModule,
+    MatProgressSpinnerModule,
+    TodoItemComponent,
+    LetDirective,
+  ],
+  selector: 'app-todos',
+  providers: [provideComponentStore(TodoStore)],
   template: `
-    <todo-item
-      *ngFor="let todo of todos$ | async"
-      [todo]="todo"
-      (update)="update($event)"
-      (delete)="delete($event)">
-    </todo-item>
+    <ng-container *ngrxLet="vm$ as vm">
+      <mat-spinner
+        [diameter]="20"
+        color="blue"
+        *ngIf="vm.isLoading; else loaded">
+      </mat-spinner>
+      <ng-template #loaded>
+        <div class="todo-container">
+          <app-todo-item *ngFor="let todo of vm.todos" [todo]="todo">
+          </app-todo-item>
+        </div>
+      </ng-template>
+    </ng-container>
   `,
-  styles: [``],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TodosComponent implements OnInit {
-  todoService = inject(TodoService);
+export class TodosComponent {
+  private todoStore = inject(TodoStore);
 
-  todos$ = this.todoService.todos$;
-
-  ngOnInit(): void {
-    this.todoService.loadTodos();
-  }
-
-  update(todo: Todo) {
-    this.todoService.updateTodo({ ...todo, title: randText() });
-  }
-
-  delete(id: number) {
-    this.todoService.deleteTodo(id);
-  }
+  vm$ = this.todoStore.vm$;
 }
